@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Derby Sales Training Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: The SPA is designed as an interactive sales dashboard. It starts with a high-level overview of the "Derby Difference" to establish brand value. The core of the app is the "Product Deep Dive" section, which uses a tab-based navigation to allow salespeople to quickly switch between Standard, Sport Plus, and Winner Plus. This structure is more efficient than scrolling through a long document. Each product tab contains key selling points and a dynamic, interactive "Competitive Comparison" chart. Users can select a competitor to instantly visualize how Derby's product stacks up on key nutritional metrics. This direct comparison is the primary interactive element, designed for real-time use during sales conversations. The "Objections Toolkit" section is now enhanced with a static Q&A accordion and a dynamic, AI-powered assistant that generates tailored responses to new objections, making the app a comprehensive, task-oriented tool for sales. This design streamlines the sales workflow and makes information highly accessible and immediately useful. -->
+    <!-- Visualization & Content Choices: 
+        - Key Selling Points (All Products): Report Info -> Inform -> Presentation Method: Bulleted lists within styled cards -> Interaction: N/A -> Justification: Clear, scannable presentation of core benefits.
+        - Nutritional Data Comparison: Report Info -> Compare -> Viz/Presentation Method: Interactive Bar Chart (Chart.js) & summary text -> Interaction: User clicks competitor buttons to dynamically update the chart and accompanying text data -> Justification: Visual comparison is far more impactful and easier to grasp than tables of numbers. The interactivity allows the salesperson to tailor the conversation to the specific competitor the client is considering. -> Library/Method: Chart.js (Canvas).
+        - Overcoming Objections (Static): Report Info -> Inform/Organize -> Viz/Presentation Method: Accordion-style expandable sections -> Interaction: User clicks on a question to reveal the answer -> Justification: Keeps the UI clean and allows salespeople to quickly find the specific objection they need to handle.
+        - Overcoming Objections (Dynamic): Report Info -> Inform -> Viz/Presentation Method: Text generation via Gemini API -> Interaction: User types a new objection and clicks a button to generate a custom response. A separate button uses Gemini's TTS API to read the response aloud -> Justification: Provides a flexible, powerful tool for handling unexpected questions and training in a real-world scenario. -> Library/Method: Gemini LLM API (Text) & Gemini TTS API (Audio).
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8;
+            color: #3D352E;
+        }
+        .active-nav {
+            border-bottom: 2px solid #C07B48;
+            color: #C07B48;
+            font-weight: 600;
+        }
+        .inactive-nav {
+            border-bottom: 2px solid transparent;
+        }
+        .btn-primary {
+            background-color: #C07B48;
+            color: #FFFFFF;
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: #A66A3E;
+        }
+        .btn-secondary {
+            background-color: #EFEBE5;
+            color: #3D352E;
+            transition: background-color 0.3s;
+        }
+        .btn-secondary:hover {
+            background-color: #E0DACE;
+        }
+         .btn-active {
+            background-color: #C07B48;
+            color: #FFFFFF;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 40vh;
+            max-height: 450px;
+        }
+        #loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #C07B48;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <header class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-bold text-[#C07B48]">DERBY</h1>
+            <p class="text-lg md:text-xl text-gray-600 mt-2">Sales Excellence Training Hub</p>
+        </header>
+
+        <nav class="flex justify-center border-b border-gray-200 mb-8">
+            <button data-section="derby-difference" class="nav-button active-nav px-4 py-2 text-sm md:text-base">The Derby Difference</button>
+            <button data-section="product-deep-dive" class="nav-button inactive-nav px-4 py-2 text-sm md:text-base">Product Deep Dive</button>
+            <button data-section="objections-toolkit" class="nav-button inactive-nav px-4 py-2 text-sm md:text-base">Objections Toolkit</button>
+        </nav>
+
+        <main>
+            <section id="derby-difference" class="content-section">
+                 <div class="text-center mb-12 max-w-3xl mx-auto">
+                    <h2 class="text-3xl font-bold mb-4">Why We Win</h2>
+                    <p class="text-gray-600">This section outlines our core competitive advantages. Understanding and communicating these points is key to establishing Derby's premium position in the market. Use these differentiators to build a strong foundation for every sales conversation.</p>
+                </div>
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow-sm">
+                        <h3 class="font-bold text-lg mb-2 text-[#C07B48]">German Quality, Local Expertise</h3>
+                        <p class="text-gray-600 text-sm">Developed, manufactured, and sealed in Germany, our formulas are scientifically designed for the unique nutritional needs of horses in the Middle East, compensating for the lack of green pastures.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm">
+                        <h3 class="font-bold text-lg mb-2 text-[#C07B48]">Optimal Nutrition, Peak Performance</h3>
+                        <p class="text-gray-600 text-sm">A perfect balance of vitamins, minerals, and amino acids builds strong muscles, supports healthy soft tissues, and promotes a shiny, healthy coat, leading to better overall performance.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm">
+                        <h3 class="font-bold text-lg mb-2 text-[#C07B48]">The Power of Lecithin</h3>
+                        <p class="text-gray-600 text-sm">A crucial selling point. Lecithin is proven to help prevent painful ulcer formation, a common issue that hampers performance. It also enhances cognitive function for better training retention.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm">
+                        <h3 class="font-bold text-lg mb-2 text-[#C07B48]">Unmatched Service & Support</h3>
+                        <p class="text-gray-600 text-sm">We provide reliable, high-quality delivery services and have an expert equine nutritionist on our team to offer personalized advice and build client trust.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="product-deep-dive" class="content-section hidden">
+                <div class="text-center mb-8 max-w-3xl mx-auto">
+                    <h2 class="text-3xl font-bold mb-4">Product Deep Dive & Comparison</h2>
+                    <p class="text-gray-600">Here you can explore each product's unique selling points and, most importantly, see how we stack up against the competition. Use the buttons to select a product and then choose a competitor to instantly visualize our advantages on the chart.</p>
+                </div>
+                <div class="flex justify-center space-x-2 mb-8">
+                    <button class="product-tab-button btn-primary rounded-full px-5 py-2 text-sm font-semibold shadow-sm" data-product="sport_plus">Sport Plus</button>
+                    <button class="product-tab-button btn-secondary rounded-full px-5 py-2 text-sm font-semibold" data-product="winner_plus">Winner Plus</button>
+                    <button class="product-tab-button btn-secondary rounded-full px-5 py-2 text-sm font-semibold" data-product="standard">Standard</button>
+                </div>
+
+                <div id="product-content">
+                </div>
+            </section>
+
+            <section id="objections-toolkit" class="content-section hidden">
+                <div class="text-center mb-12 max-w-3xl mx-auto">
+                    <h2 class="text-3xl font-bold mb-4">Overcoming Objections</h2>
+                     <p class="text-gray-600">This toolkit provides concise, effective answers to the most common questions and objections you'll encounter. Familiarize yourself with these responses to handle sales conversations with confidence and authority. Click on any question to reveal the recommended answer.</p>
+                </div>
+                <div class="max-w-3xl mx-auto space-y-4 mb-10">
+                    <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-header w-full text-left p-4 font-semibold flex justify-between items-center">
+                            How is Derby different from other feed companies in Egypt?
+                            <span class="transform transition-transform duration-300">▼</span>
+                        </button>
+                        <div class="accordion-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                            <div class="p-4 border-t border-gray-200">
+                                <ul class="list-disc list-inside space-y-2 text-gray-600">
+                                    <li><strong>Made in Germany:</strong> Our formulas are developed to suit local conditions (scarce green pastures), ensuring horses get all essential vitamins and minerals.</li>
+                                    <li><strong>Healthy Inside & Out:</strong> We pack our feeds with minerals, vitamins, and amino acids that build muscle and maintain healthy hooves, coats, and skin.</li>
+                                    <li><strong>Expert on Staff:</strong> We have a dedicated equine nutritionist to provide clients with expert advice and personalized recommendations.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                     <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-header w-full text-left p-4 font-semibold flex justify-between items-center">
+                            Do you provide delivery services?
+                             <span class="transform transition-transform duration-300">▼</span>
+                        </button>
+                        <div class="accordion-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                             <p class="p-4 border-t border-gray-200 text-gray-600">Yes! We offer reliable delivery to ensure the feed arrives fresh and in optimal condition.</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-header w-full text-left p-4 font-semibold flex justify-between items-center">
+                            How should the feed be stored?
+                             <span class="transform transition-transform duration-300">▼</span>
+                        </button>
+                        <div class="accordion-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                            <p class="p-4 border-t border-gray-200 text-gray-600">It's simple: store the feed in a cool, dry place, away from direct sunlight and moisture, and elevated from the floor to maintain its quality.</p>
+                        </div>
+                    </div>
+                     <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-header w-full text-left p-4 font-semibold flex justify-between items-center">
+                            How can customers place an order?
+                            <span class="transform transition-transform duration-300">▼</span>
+                        </button>
+                        <div class="accordion-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                           <p class="p-4 border-t border-gray-200 text-gray-600">Orders can be placed via phone or WhatsApp. Just ask for the delivery address and preferred time.</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-header w-full text-left p-4 font-semibold flex justify-between items-center">
+                            What payment methods do you accept?
+                             <span class="transform transition-transform duration-300">▼</span>
+                        </button>
+                        <div class="accordion-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                            <p class="p-4 border-t border-gray-200 text-gray-600">We accept cash on delivery and Instapay transfers.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-sm">
+                    <h3 class="text-2xl font-bold mb-4 text-center text-[#C07B48]">✨Live Objection Assistant✨</h3>
+                    <p class="text-gray-600 text-sm text-center mb-6">Type a new objection from a customer and get a professionally crafted response powered by Gemini.</p>
+                    <textarea id="objection-input" class="w-full p-4 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#C07B48] resize-none" rows="4" placeholder="e.g., 'Your feed is more expensive than my current brand.'"></textarea>
+                    <div class="flex justify-center mt-4">
+                        <button id="generate-btn" class="btn-primary rounded-full px-6 py-3 font-bold text-sm shadow-sm hover:scale-105 transform transition">Generate Response</button>
+                    </div>
+                    <div id="objection-status" class="flex justify-center mt-4 hidden">
+                        <div id="loading-spinner"></div>
+                        <p class="text-gray-500 ml-3">Crafting your response...</p>
+                    </div>
+                    <div id="objection-response" class="hidden mt-6 p-4 bg-[#FDFBF8] rounded-md border border-gray-200 relative">
+                        <p class="text-gray-700"></p>
+                        <div class="absolute bottom-2 right-2">
+                            <button id="read-aloud-btn" class="text-[#C07B48] hover:text-[#A66A3E] transition-colors duration-300 text-sm font-semibold">
+                                Read Aloud
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const productData = {
+            sport_plus: {
+                name: "Derby Sport Plus",
+                sellingPoints: [
+                    { title: "Protein (12.5%) & Fat (4.0%)", description: "Perfect for horses in moderate-to-heavy work, providing energy and muscle support without making them 'hot'." },
+                    { title: "Iron, Zinc & Copper Ratios", description: "Supports healthy ligaments and tendons, making horses less prone to injury." },
+                    { title: "Vitamin E (200 mg)", description: "A powerful anti-oxidant that supports muscle recovery and joint flexibility." },
+                    { title: "Lecithin & Key Oils", description: "Aids digestion, helps prevent ulcers, and improves cognitive function for better training." }
+                ],
+                comparisonData: {
+                    derby: { name: "Derby Sport Plus", protein: 12.5, fat: 4.0, fiber: 10.5, vitamin_e: 200 },
+                    havens: { name: "Havens Basis Sport", protein: 11.7, fat: 3.6, fiber: 12.7, vitamin_e: 200 },
+                    cavalor: { name: "Cavalor Action Mix", protein: 11.0, fat: 4.5, fiber: 10.5, vitamin_e: 200 }
+                },
+                 competitors: [
+                    { id: 'havens', name: 'Havens Basis Sport' },
+                    { id: 'cavalor', name: 'Cavalor Action Mix' }
+                ]
+            },
+            winner_plus: {
+                name: "Derby Winner Plus",
+                sellingPoints: [
+                    { title: "Crude Fat (5.4%)", description: "A high-fat formula providing consistent energy for horses in heavy work or competition, helping maintain body condition." },
+                    { title: "Low Fiber (6.5%)", description: "Allows for maximum nutrient absorption, so horses get the most out of every bite." },
+                    { title: "Omega-3 and Lecithin", description: "Extruded linseed provides a significant boost of Omega-3s for a healthy, shiny coat, while Lecithin helps prevent ulcers." },
+                    { title: "Vitamin E (300 mg)", description: "An elevated amount to aid in rapid muscle recovery after strenuous activity." }
+                ],
+                comparisonData: {
+                    derby: { name: "Derby Winner Plus", protein: 13.5, fat: 5.4, fiber: 6.5, vitamin_e: 300 },
+                    havens: { name: "Havens DraversBork", protein: 11.6, fat: 3.3, fiber: 10.5, vitamin_e: 200 },
+                },
+                 competitors: [
+                    { id: 'havens', name: 'Havens DraversBork' }
+                ]
+            },
+            standard: {
+                name: "Derby Standard",
+                sellingPoints: [
+                    { title: "High Crude Fiber (16%)", description: "Essential for optimal gut health, this feed is perfect for horses in light work, retirement, or rest." },
+                    { title: "Balanced Protein (11%)", description: "The ideal level for maintaining muscle mass in horses with lower energy requirements." },
+                    { title: "Low Feeding Amounts", description: "Our feeding recommendations reduce the risk of colic, laminitis, and other metabolic conditions." },
+                    { title: "Key Vitamins (20,000 I.U. Vit A)", description: "A balanced vitamin and mineral profile ensures overall health and well-being, exceeding competitors." }
+                ],
+                comparisonData: {
+                    derby: { name: "Derby Standard", protein: 11.0, fat: 2.5, fiber: 16.0, vitamin_a: 20000 },
+                    cavalor: { name: "Cavalor Tradition Pellet", protein: 13.5, fat: 3.0, fiber: 13.0, vitamin_a: 15000 },
+                },
+                 competitors: [
+                    { id: 'cavalor', name: 'Cavalor Tradition' }
+                ]
+            }
+        };
+
+        const navButtons = document.querySelectorAll('.nav-button');
+        const contentSections = document.querySelectorAll('.content-section');
+        const productTabButtons = document.querySelectorAll('.product-tab-button');
+        const productContentContainer = document.getElementById('product-content');
+        let currentChart = null;
+
+        function switchSection(targetId) {
+            contentSections.forEach(section => {
+                section.classList.toggle('hidden', section.id !== targetId);
+            });
+            navButtons.forEach(button => {
+                button.classList.toggle('active-nav', button.dataset.section === targetId);
+                button.classList.toggle('inactive-nav', button.dataset.section !== targetId);
+            });
+        }
+        
+        navButtons.forEach(button => {
+            button.addEventListener('click', () => switchSection(button.dataset.section));
+        });
+
+        function createProductView(productId) {
+            const product = productData[productId];
+            let competitorButtonsHTML = product.competitors.map((comp, index) => 
+                `<button class="competitor-button ${index === 0 ? 'btn-active' : ''} btn-secondary rounded-full px-4 py-2 text-sm font-semibold" data-competitor-id="${comp.id}">${comp.name}</button>`
+            ).join('');
+
+            const isStandard = productId === 'standard';
+            const chartTitle = isStandard ? "Nutritional Comparison (Protein, Fat, Fiber, Vit A)" : "Nutritional Comparison (Protein, Fat, Fiber, Vit E)";
+
+            const html = `
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="grid md:grid-cols-2 gap-8 items-center">
+                        <div>
+                            <h3 class="text-2xl font-bold mb-4">${product.name}</h3>
+                            <p class="text-gray-600 mb-6">Key Selling Points:</p>
+                            <ul class="space-y-4">
+                                ${product.sellingPoints.map(p => `
+                                    <li>
+                                        <p class="font-semibold text-md text-[#C07B48]">${p.title}</p>
+                                        <p class="text-gray-500 text-sm">${p.description}</p>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-semibold text-center mb-4">${chartTitle}</h4>
+                            <div class="chart-container">
+                                <canvas id="comparisonChart"></canvas>
+                            </div>
+                            <div class="flex justify-center flex-wrap gap-2 mt-4">
+                                ${competitorButtonsHTML}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            productContentContainer.innerHTML = html;
+            
+            const initialCompetitor = product.competitors[0].id;
+            createOrUpdateChart(productId, initialCompetitor);
+
+            document.querySelectorAll('.competitor-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    document.querySelectorAll('.competitor-button').forEach(btn => btn.classList.remove('btn-active', 'btn-secondary'));
+                    document.querySelectorAll('.competitor-button').forEach(btn => {
+                       if(btn === button) {
+                           btn.classList.add('btn-active');
+                       } else {
+                           btn.classList.add('btn-secondary');
+                       }
+                    });
+
+                    createOrUpdateChart(productId, button.dataset.competitorId);
+                });
+            });
+        }
+
+        function createOrUpdateChart(productId, competitorId) {
+            const product = productData[productId];
+            const derbyData = product.comparisonData.derby;
+            const competitorData = product.comparisonData[competitorId];
+
+            const isStandard = productId === 'standard';
+
+            let labels, derbyValues, competitorValues, labelSuffixes;
+
+            if (isStandard) {
+                labels = ['Protein', 'Fat', 'Fiber', 'Vitamin A'];
+                derbyValues = [derbyData.protein, derbyData.fat, derbyData.fiber, derbyData.vitamin_a / 1000];
+                competitorValues = [competitorData.protein, competitorData.fat, competitorData.fiber, competitorData.vitamin_a / 1000];
+                labelSuffixes = ['%', '%', '%', 'k I.U.'];
+            } else {
+                labels = ['Protein', 'Fat', 'Fiber', 'Vitamin E'];
+                derbyValues = [derbyData.protein, derbyData.fat, derbyData.fiber, derbyData.vitamin_e];
+                competitorValues = [competitorData.protein, competitorData.fat, competitorData.fiber, competitorData.vitamin_e];
+                labelSuffixes = ['%', '%', '%', ' mg'];
+            }
+
+            const ctx = document.getElementById('comparisonChart').getContext('2d');
+
+            if (currentChart) {
+                currentChart.destroy();
+            }
+
+            currentChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: derbyData.name,
+                            data: derbyValues,
+                            backgroundColor: 'rgba(192, 123, 72, 0.7)',
+                            borderColor: 'rgba(192, 123, 72, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: competitorData.name,
+                            data: competitorValues,
+                            backgroundColor: 'rgba(224, 218, 206, 0.7)',
+                            borderColor: 'rgba(224, 218, 206, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#3D352E'
+                            },
+                             grid: {
+                                color: '#EFEBE5'
+                            }
+                        },
+                        x: {
+                             ticks: {
+                                color: '#3D352E'
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: '#3D352E'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y + labelSuffixes[context.dataIndex];
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+
+        productTabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                productTabButtons.forEach(btn => {
+                    btn.classList.remove('btn-primary');
+                    btn.classList.add('btn-secondary');
+                });
+                button.classList.add('btn-primary');
+                button.classList.remove('btn-secondary');
+                createProductView(button.dataset.product);
+            });
+        });
+
+        document.querySelectorAll('.accordion-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const content = header.nextElementSibling;
+                const icon = header.querySelector('span');
+                
+                header.parentElement.classList.toggle('bg-gray-50');
+
+                if (content.style.maxHeight) {
+                    content.style.maxHeight = null;
+                    icon.style.transform = 'rotate(0deg)';
+                } else {
+                    document.querySelectorAll('.accordion-content').forEach(c => c.style.maxHeight = null);
+                    document.querySelectorAll('.accordion-header span').forEach(i => i.style.transform = 'rotate(0deg)');
+                    content.style.maxHeight = content.scrollHeight + "px";
+                    icon.style.transform = 'rotate(180deg)';
+                }
+            });
+        });
+
+        const generateBtn = document.getElementById('generate-btn');
+        const objectionInput = document.getElementById('objection-input');
+        const statusDiv = document.getElementById('objection-status');
+        const responseDiv = document.getElementById('objection-response');
+        const responseText = responseDiv.querySelector('p');
+        const readAloudBtn = document.getElementById('read-aloud-btn');
+
+        const apiKey = "";
+        const textModelUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+        const ttsModelUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+        
+        async function fetchWithBackoff(url, options, retries = 3, delay = 1000) {
+            try {
+                const response = await fetch(url, options);
+                if (response.status === 429 && retries > 0) {
+                    await new Promise(res => setTimeout(res, delay));
+                    return fetchWithBackoff(url, options, retries - 1, delay * 2);
+                }
+                return response;
+            } catch (error) {
+                if (retries > 0) {
+                    await new Promise(res => setTimeout(res, delay));
+                    return fetchWithBackoff(url, options, retries - 1, delay * 2);
+                }
+                throw error;
+            }
+        }
+        
+        generateBtn.addEventListener('click', async () => {
+            const userObjection = objectionInput.value.trim();
+            if (!userObjection) {
+                return;
+            }
+
+            statusDiv.classList.remove('hidden');
+            responseDiv.classList.add('hidden');
+            generateBtn.disabled = true;
+
+            const systemPrompt = `You are an expert equine nutritionist and a top-tier sales representative for Derby, a high-quality German horse feed. A salesperson is facing a customer objection. Your task is to provide a concise, persuasive, and evidence-based answer that directly addresses the customer's concern and reinforces Derby's value. The response should be empathetic but firm, and focus on the nutritional and quality benefits of Derby feed. Avoid being overly aggressive or negative about competitors. Keep the response to 2-3 sentences max.`;
+            const payload = {
+                contents: [{ parts: [{ text: userObjection }] }],
+                tools: [{ "google_search": {} }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+            };
+
+            try {
+                const response = await fetchWithBackoff(textModelUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (text) {
+                    responseText.innerText = text;
+                    responseDiv.classList.remove('hidden');
+                } else {
+                    responseText.innerText = 'Sorry, I could not generate a response. Please try again.';
+                    responseDiv.classList.remove('hidden');
+                }
+            } catch (e) {
+                console.error('Error generating response:', e);
+                responseText.innerText = 'An error occurred. Please check your network connection and try again.';
+                responseDiv.classList.remove('hidden');
+            } finally {
+                statusDiv.classList.add('hidden');
+                generateBtn.disabled = false;
+            }
+        });
+        
+        function base64ToArrayBuffer(base64) {
+            const binaryString = atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        function pcmToWav(pcmData, sampleRate) {
+            const pcm16 = new Int16Array(pcmData);
+            const numChannels = 1;
+            const numSamples = pcm16.length;
+            const buffer = new ArrayBuffer(44 + numSamples * 2);
+            const view = new DataView(buffer);
+
+            let offset = 0;
+
+            function writeString(str) {
+                for (let i = 0; i < str.length; i++) {
+                    view.setUint8(offset + i, str.charCodeAt(i));
+                }
+                offset += str.length;
+            }
+
+            function writeUint32(val) {
+                view.setUint32(offset, val, true);
+                offset += 4;
+            }
+
+            function writeUint16(val) {
+                view.setUint16(offset, val, true);
+                offset += 2;
+            }
+
+            writeString('RIFF');
+            writeUint32(36 + numSamples * 2);
+            writeString('WAVE');
+            writeString('fmt ');
+            writeUint32(16);
+            writeUint16(1); // AudioFormat: 1 for PCM
+            writeUint16(numChannels);
+            writeUint32(sampleRate);
+            writeUint32(sampleRate * numChannels * 2);
+            writeUint16(numChannels * 2);
+            writeUint16(16); // BitsPerSample
+            writeString('data');
+            writeUint32(numSamples * 2);
+
+            for (let i = 0; i < numSamples; i++) {
+                view.setInt16(offset, pcm16[i], true);
+                offset += 2;
+            }
+
+            return new Blob([view], { type: 'audio/wav' });
+        }
+
+        readAloudBtn.addEventListener('click', async () => {
+            const textToSpeak = responseText.innerText;
+            if (!textToSpeak) return;
+
+            readAloudBtn.disabled = true;
+            readAloudBtn.innerText = 'Speaking...';
+
+            const payload = {
+                contents: [{
+                    parts: [{ text: textToSpeak }]
+                }],
+                generationConfig: {
+                    responseModalities: ["AUDIO"],
+                    speechConfig: {
+                        voiceConfig: {
+                            prebuiltVoiceConfig: { voiceName: "Puck" }
+                        }
+                    }
+                },
+            };
+
+            try {
+                const response = await fetchWithBackoff(ttsModelUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                const part = result?.candidates?.[0]?.content?.parts?.[0];
+                const audioData = part?.inlineData?.data;
+                const mimeType = part?.inlineData?.mimeType;
+
+                if (audioData && mimeType && mimeType.startsWith("audio/")) {
+                    const sampleRate = parseInt(mimeType.match(/rate=(\d+)/)[1], 10);
+                    const pcmData = base64ToArrayBuffer(audioData);
+                    const wavBlob = pcmToWav(pcmData, sampleRate);
+                    const audioUrl = URL.createObjectURL(wavBlob);
+                    
+                    const audio = new Audio(audioUrl);
+                    audio.play();
+
+                    audio.onended = () => {
+                        readAloudBtn.disabled = false;
+                        readAloudBtn.innerText = 'Read Aloud';
+                        URL.revokeObjectURL(audioUrl);
+                    };
+                } else {
+                    throw new Error('Invalid audio data received.');
+                }
+
+            } catch (e) {
+                console.error('Error with TTS:', e);
+                readAloudBtn.disabled = false;
+                readAloudBtn.innerText = 'Read Aloud';
+            }
+        });
+
+        window.onload = () => {
+            switchSection('derby-difference');
+            createProductView('sport_plus');
+        };
+    </script>
+</body>
+</html>
