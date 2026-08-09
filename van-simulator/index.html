@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Smart Power — Mobile Van Service Simulator</title>
+<meta name="description" content="A browser-based 3D training game built from Smart Power's Mobile Van Service operating manual." />
+<link rel="stylesheet" href="css/style.css" />
+<script type="importmap">
+{
+  "imports": {
+    "three": "./js/vendor/three/build/three.module.js",
+    "three/addons/": "./js/vendor/three/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body class="lang-ar">
+<div id="app-root">
+
+  <!-- MENU SCREEN -->
+  <section id="screen-menu" class="screen active">
+    <div class="topbar">
+      <div class="brand-mark">
+        <span class="brand-name" data-i18n="brand_name">سمارت باور</span>
+        <span class="brand-tagline" data-i18n="brand_tagline">محاكي خدمة الفان المتنقلة</span>
+      </div>
+      <button id="lang-toggle-btn" class="lang-toggle" data-i18n="lang_toggle">English</button>
+    </div>
+
+    <div class="menu-hero">
+      <h1 class="hero-title" data-i18n="brand_tagline">محاكي خدمة الفان المتنقلة</h1>
+      <p class="hero-sub" data-i18n="brand_sub">اتدرب زي الفريق. اكسر معيار سمارت باور 85%.</p>
+      <span class="hero-target" data-i18n="menu_target_score">الهدف: 85%</span>
+    </div>
+
+    <div class="scenario-grid" id="scenario-grid">
+      <!-- scenario cards injected by main.js -->
+    </div>
+
+    <p class="controls-hint" data-i18n="menu_controls_hint">WASD للحركة · الماوس للنظر · E للتفاعل · Esc لإيقاف مؤقت</p>
+  </section>
+
+  <!-- GAME SCREEN -->
+  <section id="screen-game" class="screen">
+    <div id="game-canvas-container"></div>
+
+    <div id="hud">
+      <div class="hud-top-row">
+        <div class="hud-stat hud-panel" id="hud-time-stat">
+          <div class="stat-label" data-i18n="hud_time_left">الوقت</div>
+          <div class="stat-value" id="hud-time-value">--:--</div>
+        </div>
+        <div class="hud-stat hud-panel" id="hud-score-stat">
+          <div class="stat-label" data-i18n="hud_score_live">النتيجة الحالية</div>
+          <div class="stat-value" id="hud-score-value">100%</div>
+        </div>
+      </div>
+
+      <div class="hud-tasklist hud-panel">
+        <div class="tasklist-title" data-i18n="hud_tasks">المهام</div>
+        <ul id="hud-task-list"></ul>
+      </div>
+
+      <div class="hud-held hud-panel">
+        <span data-i18n="hud_held">ماسك</span>: <span class="held-value" id="hud-held-value" data-i18n="hud_nothing_held">مفيش حاجة</span>
+      </div>
+
+      <div class="crosshair"></div>
+      <div class="interact-prompt hud-panel" id="interact-prompt"></div>
+
+      <button class="hud-menu-btn" id="hud-menu-btn" data-i18n="hud_menu_btn">رجوع للقائمة</button>
+
+      <div class="pause-overlay" id="pause-overlay">
+        <div class="pause-title" data-i18n="hud_paused">إيقاف مؤقت</div>
+        <div class="pause-hint" data-i18n="hud_resume">اضغط على الشاشة للاستمرار</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULT SCREEN -->
+  <section id="screen-result" class="screen">
+    <div class="result-card">
+      <div class="result-title" data-i18n="result_title">بطاقة تقييم الخدمة</div>
+      <div class="result-banner" id="result-banner"></div>
+      <span class="result-critical-tag" id="result-critical-tag" style="display:none;"></span>
+      <div class="result-score" id="result-score">--%</div>
+
+      <div class="result-breakdown" id="result-breakdown"></div>
+
+      <div class="result-tip" id="result-tip" style="display:none;">
+        <span class="tip-label" data-i18n="result_tip_label">نصيحة سمارت باور</span>
+        <span id="result-tip-text"></span>
+      </div>
+
+      <div class="result-actions">
+        <button class="btn-secondary" id="result-menu-btn" data-i18n="result_menu">رجوع للقائمة</button>
+        <button class="btn-secondary" id="result-share-btn" data-i18n="result_share">انسخ نتيجتك للمشاركة</button>
+        <button class="btn-secondary" id="result-retry-btn" data-i18n="result_retry">إعادة المحاولة</button>
+        <button class="btn-primary" id="result-next-btn" data-i18n="result_next">المهمة التالية</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="loading-veil" id="loading-veil"><span data-i18n="loading">جاري التحميل…</span></div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
