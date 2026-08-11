@@ -18,9 +18,12 @@ python3 -m http.server 8080
 # then open http://localhost:8080/index.html
 ```
 
-Controls: **WASD** to move, **mouse** to look (click the canvas to enable
-pointer-lock), **E** to interact with the highlighted object, **Esc** to
-pause.
+Controls: **WASD** to move, **click and drag** (mouse or touch) to look
+around, **E** to interact with the highlighted object, **Esc** to pause.
+Deliberately not using the Pointer Lock API — it's commonly blocked inside
+sandboxed iframes (including the Artifacts viewer this game is also
+published through), so click-and-drag is used instead since it works
+everywhere, including on touchscreens.
 
 ## What's here (V1)
 

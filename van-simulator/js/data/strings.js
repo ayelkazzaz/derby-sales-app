@@ -14,8 +14,8 @@ export const STRINGS = {
   menu_play: { en: 'Play', ar: 'ابدأ' },
   menu_locked: { en: 'Coming Soon', ar: 'قريبًا' },
   menu_controls_hint: {
-    en: 'WASD to move · Mouse to look · E to interact · Esc to pause',
-    ar: 'WASD للحركة · الماوس للنظر · E للتفاعل · Esc لإيقاف مؤقت',
+    en: 'WASD to move · Click + drag to look · E to interact · Esc to pause',
+    ar: 'WASD للحركة · اضغط واسحب للنظر · E للتفاعل · Esc لإيقاف مؤقت',
   },
   menu_target_score: { en: 'Target score: 85%', ar: 'الهدف: 85%' },
 

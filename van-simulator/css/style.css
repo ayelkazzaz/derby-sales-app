@@ -237,7 +237,11 @@ button {
   z-index: 4;
   font-variant-numeric: tabular-nums;
 }
-#hud > * { pointer-events: auto; }
+/* Only real controls capture clicks — everything else (stats, task list,
+   crosshair, prompts) is informational and must let clicks fall through to
+   the canvas beneath, or drag-to-look breaks the moment the pointer starts
+   over one of these panels. */
+#hud-menu-btn { pointer-events: auto; }
 
 .hud-panel {
   background: rgba(10, 22, 34, 0.72);
