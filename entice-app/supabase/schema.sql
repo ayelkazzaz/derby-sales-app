@@ -76,6 +76,24 @@ create policy "profiles_select_self_or_partner" on profiles for select
 create policy "profiles_update_self" on profiles for update using (id = auth.uid());
 create policy "profiles_insert_self" on profiles for insert with check (id = auth.uid());
 
+-- Auto-create a profiles row the moment an account is created, using the
+-- display_name passed in signUp's options.data. Runs as the table owner
+-- (security definer), so it isn't subject to the client-side RLS/timing
+-- issue that made the old "create it from the browser after sign-in"
+-- approach unreliable — this is the one source of truth for profile creation.
+create or replace function handle_new_user() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  insert into profiles (id, display_name)
+  values (new.id, coalesce(new.raw_user_meta_data->>'display_name', new.email, 'You'))
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;
+
+create trigger on_auth_user_created after insert on auth.users
+  for each row execute function handle_new_user();
+
 create policy "couples_select_members" on couples for select using (is_couple_member(id));
 
 create policy "couple_members_select" on couple_members for select

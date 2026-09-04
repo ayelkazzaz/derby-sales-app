@@ -162,6 +162,21 @@ export default function App() {
     return <div className="app-root" style={{ alignItems: 'center', justifyContent: 'center' }}><p style={{ color: 'var(--muted)' }}>Loading…</p></div>;
   }
 
+  if (auth.session && !auth.profile) {
+    return (
+      <div className="app-root">
+        <Toasts toasts={toasts} />
+        <div className="onboarding">
+          <div className="onboarding-card">
+            <div className="wordmark large">Entice</div>
+            <p className="error-text">{auth.profileError || 'Something went wrong loading your account.'}</p>
+            <button className="btn primary full" onClick={() => auth.signOut()}>Sign out and try again</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!auth.session || !auth.profile) {
     return (
       <div className="app-root">
